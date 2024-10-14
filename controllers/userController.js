@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 
+// TODO: Проверка зареган ли пользователь, если да, то просто даем ссылку
 const createUser = async (phoneNumber) => {
   const client = await pool.connect();
   try {
