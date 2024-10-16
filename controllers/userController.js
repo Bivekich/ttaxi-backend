@@ -2,10 +2,17 @@ const pool = require("../config/db");
 const createUser = async (phoneNumber) => {
   const client = await pool.connect();
   try {
+    // Удаляем символ "+" из номера телефона, если он есть
+    const sanitizedPhoneNumber = phoneNumber.startsWith("+")
+      ? phoneNumber.slice(1)
+      : phoneNumber;
+
     // Проверяем, существует ли пользователь с данным номером телефона
     const checkUserQuery =
       "SELECT * FROM users WHERE phone_number = $1 and type = 'client'";
-    const checkUserResult = await client.query(checkUserQuery, [phoneNumber]);
+    const checkUserResult = await client.query(checkUserQuery, [
+      sanitizedPhoneNumber,
+    ]);
 
     // Если пользователь уже существует, возвращаем его данные
     if (checkUserResult.rows.length > 0) {
@@ -16,7 +23,7 @@ const createUser = async (phoneNumber) => {
     // Если пользователь не найден, создаем нового
     const insertUserQuery =
       "INSERT INTO users (phone_number) VALUES ($1) RETURNING *";
-    const result = await client.query(insertUserQuery, [phoneNumber]);
+    const result = await client.query(insertUserQuery, [sanitizedPhoneNumber]);
 
     return result.rows[0]; // Возвращаем нового пользователя
   } catch (error) {
@@ -71,9 +78,13 @@ const addUser = async (req, res) => {
 
   try {
     // If user does not exist, insert new user
+    const sanitizedPhoneNumber = phoneNumber.startsWith("+")
+      ? phoneNumber.slice(1)
+      : phoneNumber;
+
     const queryText =
       "INSERT INTO users (phone_number, type) VALUES ($1, $2) RETURNING *";
-    const result = await pool.query(queryText, [phoneNumber, status]);
+    const result = await pool.query(queryText, [sanitizedPhoneNumber, status]);
 
     res.status(201).json(result.rows[0]); // Respond with the created user
   } catch (error) {
