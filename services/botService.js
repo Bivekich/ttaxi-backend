@@ -62,12 +62,14 @@ bot.onText(/\/driver/, (msg) => {
 bot.on("contact", async (msg) => {
   const chatId = msg.chat.id;
   const phoneNumber = msg.contact.phone_number;
-
+  const sanitizedPhoneNumber = phoneNumber.startsWith("+")
+    ? phoneNumber.slice(1)
+    : phoneNumber;
   // Check if the user is requesting admin access
   if (adminRequests.has(chatId)) {
     adminRequests.delete(chatId); // Remove from admin requests
     try {
-      const adminAccess = await isAdmin(phoneNumber);
+      const adminAccess = await isAdmin(sanitizedPhoneNumber);
       if (adminAccess) {
         bot.sendMessage(
           chatId,
@@ -78,7 +80,7 @@ bot.on("contact", async (msg) => {
                 [
                   {
                     text: "Открыть админ-приложение",
-                    url: `${process.env.ADMIN_APP_URL}?phoneNumber=${phoneNumber}`,
+                    url: `${process.env.ADMIN_APP_URL}?phoneNumber=${sanitizedPhoneNumber}`,
                   },
                 ],
               ],
@@ -101,7 +103,7 @@ bot.on("contact", async (msg) => {
   if (driverRequests.has(chatId)) {
     driverRequests.delete(chatId); // Remove from driver requests
     try {
-      const driverAccess = await isDriver(phoneNumber); // Check driver access
+      const driverAccess = await isDriver(sanitizedPhoneNumber); // Check driver access
       if (driverAccess) {
         bot.sendMessage(
           chatId,
@@ -112,7 +114,7 @@ bot.on("contact", async (msg) => {
                 [
                   {
                     text: "Открыть приложение водителя",
-                    url: `${process.env.DRIVER_APP_URL}?phoneNumber=${phoneNumber}`,
+                    url: `${process.env.DRIVER_APP_URL}?phoneNumber=${sanitizedPhoneNumber}`,
                   },
                 ],
               ],
@@ -130,7 +132,7 @@ bot.on("contact", async (msg) => {
 
   // Default case: creating a user if neither admin nor driver
   try {
-    await createUser(phoneNumber);
+    await createUser(sanitizedPhoneNumber);
     bot.sendMessage(
       chatId,
       "Ваш номер успешно сохранен. Открыть мини-приложение",
@@ -140,7 +142,7 @@ bot.on("contact", async (msg) => {
             [
               {
                 text: "Открыть приложение",
-                url: `${process.env.APP_URL}?phoneNumber=${phoneNumber}`,
+                url: `${process.env.APP_URL}?phoneNumber=${sanitizedPhoneNumber}`,
               },
             ],
           ],
