@@ -133,9 +133,9 @@ const getUser = async (req, res) => {
       return res.status(404).json({ message: "Пользователя не существует" });
     }
 
-    console.log(result.rows[0]);
+    console.log(result.rows);
 
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(result.rows);
   } catch (error) {
     console.error("Error fetching price per minute:", error);
     res.status(500).json({ error: "Internal Server Error" });
