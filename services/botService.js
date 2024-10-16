@@ -1,10 +1,12 @@
 const TelegramBot = require("node-telegram-bot-api");
 const { createUser } = require("../controllers/userController");
 const { isAdmin } = require("../controllers/adminController");
+const { isDriver } = require("../controllers/driverController"); // Assuming you have a driver controller
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 
 const adminRequests = new Map();
+const driverRequests = new Map(); // Map to handle driver requests
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -39,12 +41,31 @@ bot.onText(/\/admin/, (msg) => {
   );
 });
 
+// New /driver command
+bot.onText(/\/driver/, (msg) => {
+  const chatId = msg.chat.id;
+  driverRequests.set(chatId, true); // Store the driver request
+  bot.sendMessage(
+    chatId,
+    "Пожалуйста, отправьте ваш номер телефона для проверки прав водителя",
+    {
+      reply_markup: {
+        keyboard: [
+          [{ text: "Отправить номер телефона", request_contact: true }],
+        ],
+        one_time_keyboard: true,
+      },
+    }
+  );
+});
+
 bot.on("contact", async (msg) => {
   const chatId = msg.chat.id;
   const phoneNumber = msg.contact.phone_number;
 
+  // Check if the user is requesting admin access
   if (adminRequests.has(chatId)) {
-    adminRequests.delete(chatId);
+    adminRequests.delete(chatId); // Remove from admin requests
     try {
       const adminAccess = await isAdmin(phoneNumber);
       if (adminAccess) {
@@ -73,28 +94,61 @@ bot.on("contact", async (msg) => {
         "Произошла ошибка при проверке прав администратора."
       );
     }
-  } else {
+    return;
+  }
+
+  // Check if the user is requesting driver access
+  if (driverRequests.has(chatId)) {
+    driverRequests.delete(chatId); // Remove from driver requests
     try {
-      await createUser(phoneNumber);
-      bot.sendMessage(
-        chatId,
-        "Ваш номер успешно сохранен. Открыть мини-приложение",
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "Открыть приложение",
-                  url: `${process.env.APP_URL}?phoneNumber=${phoneNumber}`,
-                },
+      const driverAccess = await isDriver(phoneNumber); // Check driver access
+      if (driverAccess) {
+        bot.sendMessage(
+          chatId,
+          "У вас есть доступ к приложению водителя. Открыть мини-приложение",
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Открыть приложение водителя",
+                    url: `${process.env.DRIVER_APP_URL}?phoneNumber=${phoneNumber}`,
+                  },
+                ],
               ],
-            ],
-          },
-        }
-      );
+            },
+          }
+        );
+      } else {
+        bot.sendMessage(chatId, "У вас нет прав водителя.");
+      }
     } catch (error) {
-      bot.sendMessage(chatId, "Произошла ошибка при сохранении номера.");
+      bot.sendMessage(chatId, "Произошла ошибка при проверке прав водителя.");
     }
+    return;
+  }
+
+  // Default case: creating a user if neither admin nor driver
+  try {
+    await createUser(phoneNumber);
+    bot.sendMessage(
+      chatId,
+      "Ваш номер успешно сохранен. Открыть мини-приложение",
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Открыть приложение",
+                url: `${process.env.APP_URL}?phoneNumber=${phoneNumber}`,
+              },
+            ],
+          ],
+        },
+      }
+    );
+  } catch (error) {
+    bot.sendMessage(chatId, "Произошла ошибка при сохранении номера.");
   }
 });
 

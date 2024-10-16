@@ -3,9 +3,22 @@ const router = express.Router();
 const {
   createNewOrder,
   getUserRidesController,
+  getAllRides,
+  getOrderController,
+  startRideController,
+  endRideController,
+  cancelOrder,
 } = require("../controllers/orderController");
 
-router.post("/", createNewOrder);
-router.get("/:phoneNumber", getUserRidesController);
+// Маршруты для работы с заказами
+router.get("/all", getAllRides); // Получить все поездки
+router.post("/", createNewOrder); // Создать новый заказ
+router.get("/get/:phoneNumber", getUserRidesController); // Получить поездки по номеру телефона
+router.get("/order/:id/:phoneNumber", getOrderController); // Получить заказ по ID
+router.get("/cancel/:id", cancelOrder);
+
+// Маршруты для начала и завершения поездки
+router.post("/set/:id/start-trip", startRideController); // Начать поездку
+router.post("/set/:id/end-trip", endRideController); // Завершить поездку
 
 module.exports = router;
