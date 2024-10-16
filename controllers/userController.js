@@ -1,13 +1,24 @@
 const pool = require("../config/db");
-
-// TODO: Проверка зареган ли пользователь, если да, то просто даем ссылку
 const createUser = async (phoneNumber) => {
   const client = await pool.connect();
   try {
-    const queryText =
+    // Проверяем, существует ли пользователь с данным номером телефона
+    const checkUserQuery =
+      "SELECT * FROM users WHERE phone_number = $1 and type = 'client'";
+    const checkUserResult = await client.query(checkUserQuery, [phoneNumber]);
+
+    // Если пользователь уже существует, возвращаем его данные
+    if (checkUserResult.rows.length > 0) {
+      console.log("Пользователь уже зарегистрирован.");
+      return checkUserResult.rows[0];
+    }
+
+    // Если пользователь не найден, создаем нового
+    const insertUserQuery =
       "INSERT INTO users (phone_number) VALUES ($1) RETURNING *";
-    const result = await client.query(queryText, [phoneNumber]);
-    return result.rows[0];
+    const result = await client.query(insertUserQuery, [phoneNumber]);
+
+    return result.rows[0]; // Возвращаем нового пользователя
   } catch (error) {
     console.error("Ошибка при создании пользователя", error);
     throw error;
@@ -59,15 +70,6 @@ const addUser = async (req, res) => {
   const { phoneNumber, status } = req.body; // Get data from request body
 
   try {
-    // Check if the user already exists
-    const checkUserQuery = "SELECT * FROM users WHERE phone_number = $1";
-    const existingUserResult = await pool.query(checkUserQuery, [phoneNumber]);
-
-    if (existingUserResult.rows.length > 0) {
-      // User already exists
-      return res.status(409).json({ message: "Пользователь уже существует" });
-    }
-
     // If user does not exist, insert new user
     const queryText =
       "INSERT INTO users (phone_number, type) VALUES ($1, $2) RETURNING *";
@@ -141,6 +143,7 @@ const getUser = async (req, res) => {
 };
 
 module.exports = {
+  createUser,
   getAllUsers,
   changeStatus,
   addUser,
