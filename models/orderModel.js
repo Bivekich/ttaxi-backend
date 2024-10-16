@@ -48,6 +48,14 @@ const getUserRides = async (phoneNumber) => {
   const result = await pool.query(selectRidesQuery, [phoneNumber]);
   return result.rows;
 };
+// Получить поездки пользователя по номеру телефона
+const getDriverRides = async (phoneNumber) => {
+  const selectRidesQuery = `
+    SELECT * FROM orders WHERE driver_phone = $1 ORDER BY created_at DESC;
+  `;
+  const result = await pool.query(selectRidesQuery, [phoneNumber]);
+  return result.rows;
+};
 
 // Получить все поездки
 const getAllRidesModel = async () => {
@@ -136,4 +144,5 @@ module.exports = {
   updateOrderStatus,
   updateOrderDriverPhone,
   getPricePerMinute,
+  getDriverRides,
 };

@@ -8,12 +8,14 @@ const {
   startRideController,
   endRideController,
   cancelOrder,
+  getDriverRidesController,
 } = require("../controllers/orderController");
 
 // Маршруты для работы с заказами
 router.get("/all", getAllRides); // Получить все поездки
 router.post("/", createNewOrder); // Создать новый заказ
 router.get("/get/:phoneNumber", getUserRidesController); // Получить поездки по номеру телефона
+router.get("/dget/:phoneNumber", getDriverRidesController); // Получить поездки по номеру телефона
 router.get("/order/:id/:phoneNumber", getOrderController); // Получить заказ по ID
 router.get("/cancel/:id", cancelOrder);
 

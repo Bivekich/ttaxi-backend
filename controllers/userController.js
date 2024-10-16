@@ -121,10 +121,30 @@ const getPricePerMinute = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+  const { phoneNumber } = req.params;
+  try {
+    const queryText = "SELECT * FROM users WHERE phone_number = $1";
+    const result = await pool.query(queryText, [phoneNumber]); // Assuming there's only one record with id = 1
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Пользователя не существует" });
+    }
+
+    console.log(result.rows[0]);
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching price per minute:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getAllUsers,
   changeStatus,
   addUser,
   changeAdmin,
-  getPricePerMinute, // Export the new function
+  getPricePerMinute,
+  getUser,
 };

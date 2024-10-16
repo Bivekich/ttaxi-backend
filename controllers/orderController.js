@@ -6,6 +6,7 @@ const {
   updateOrderStatus,
   updateOrderDriverPhone,
   getPricePerMinute,
+  getDriverRides,
 } = require("../models/orderModel");
 
 // Создать новый заказ
@@ -54,6 +55,18 @@ const getUserRidesController = async (req, res) => {
 
   try {
     const rides = await getUserRides(phoneNumber);
+    res.status(200).json(rides);
+  } catch (error) {
+    console.error("Ошибка при получении поездок:", error);
+    res.status(500).json({ error: "Ошибка сервера при получении поездок" });
+  }
+};
+// Получить поездки пользователя по номеру телефона
+const getDriverRidesController = async (req, res) => {
+  const { phoneNumber } = req.params;
+
+  try {
+    const rides = await getDriverRides(phoneNumber);
     res.status(200).json(rides);
   } catch (error) {
     console.error("Ошибка при получении поездок:", error);
@@ -197,6 +210,7 @@ const cancelOrder = async (req, res) => {
 module.exports = {
   createNewOrder,
   getUserRidesController,
+  getDriverRidesController,
   getAllRides,
   getOrderController,
   startRideController,
