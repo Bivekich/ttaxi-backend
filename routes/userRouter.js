@@ -7,6 +7,7 @@ const {
   changeAdmin,
   getPricePerMinute,
   getUser,
+  getUserTypesCount,
 } = require("../controllers/userController");
 
 // Existing routes
@@ -18,5 +19,7 @@ router.get("/profile/:phoneNumber", getUser);
 // New route for changing admin settings
 router.post("/changeAdmin", changeAdmin); // Add the new route here
 router.get("/getPricePerMinute", getPricePerMinute);
+
+router.get("/getUserTypesCount/:type", getUserTypesCount);
 
 module.exports = router;

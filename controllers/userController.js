@@ -152,6 +152,21 @@ const getUser = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const getUserTypesCount = async (req, res) => {
+  const { type } = req.params;
+  try {
+    // Corrected the query by removing the quotes around $1
+    const queryText = "SELECT id FROM users WHERE type = $1";
+    const result = await pool.query(queryText, [type]);
+
+    console.log(result.rows);
+
+    res.status(200).json(result.rows.length); // Assuming you want the count of rows
+  } catch (error) {
+    console.error("Error fetching user type count:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 module.exports = {
   createUser,
@@ -161,4 +176,5 @@ module.exports = {
   changeAdmin,
   getPricePerMinute,
   getUser,
+  getUserTypesCount,
 };
